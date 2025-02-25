@@ -92,7 +92,12 @@ const char HTML_PAGE[] PROGMEM = R"rawliteral(
   <script>
     const tempCtx = document.getElementById('tempChart').getContext('2d');
     const humCtx = document.getElementById('humChart').getContext('2d');
-
+  
+    let minTemp = 20;
+    let maxTemp = 40;
+    let minHum = 70;
+    let maxHum = 100;
+  
     const tempChart = new Chart(tempCtx, {
       type: 'line',
       data: {
@@ -111,8 +116,8 @@ const char HTML_PAGE[] PROGMEM = R"rawliteral(
         scales: {
           y: {
             beginAtZero: false, // Para que o gráfico se ajuste melhor ao valor
-            suggestedMin: 0,    // Define o mínimo sugerido (ajustar conforme os dados)
-            suggestedMax: 50,   // Define o máximo sugerido (ajustar conforme os dados)
+            suggestedMin: minTemp,    // Define o mínimo sugerido (ajustar conforme os dados)
+            suggestedMax: maxTemp,   // Define o máximo sugerido (ajustar conforme os dados)
             ticks: {
               stepSize: 5 // Define a altura do intervalo de marcação no eixo Y
             }
@@ -127,7 +132,7 @@ const char HTML_PAGE[] PROGMEM = R"rawliteral(
         }
       }
     });
-
+  
     const humChart = new Chart(humCtx, {
       type: 'line',
       data: {
@@ -146,8 +151,8 @@ const char HTML_PAGE[] PROGMEM = R"rawliteral(
         scales: {
           y: {
             beginAtZero: false,
-            suggestedMin: 0,
-            suggestedMax: 100,
+            suggestedMin: minHum,  // Define o mínimo sugerido para umidade
+            suggestedMax: maxHum,  // Define o máximo sugerido para umidade
             ticks: {
               stepSize: 10
             }
@@ -162,37 +167,54 @@ const char HTML_PAGE[] PROGMEM = R"rawliteral(
         }
       }
     });
-
+  
     function updateData() {
       fetch('/data')
         .then(response => response.json())
         .then(data => {
-          document.getElementById('temp').innerHTML = data.temperatura + " ºC";
-          document.getElementById('hum').innerHTML = data.umidade + " %";
-
+          const temp = data.temperatura;
+          const hum = data.umidade;
+          
+          // Atualizando os dados exibidos
+          document.getElementById('temp').innerHTML = temp + " ºC";
+          document.getElementById('hum').innerHTML = hum + " %";
+  
+          // Atualizando os limites mínimos e máximos da temperatura
+          if (temp < minTemp) minTemp = temp;
+          if (temp > maxTemp) maxTemp = temp;
+  
+          // Atualizando os limites mínimos e máximos da umidade
+          if (hum < minHum) minHum = hum;
+          if (hum > maxHum) maxHum = hum;
+  
+          // Atualizando os gráficos com novos dados
           const now = new Date().toLocaleTimeString();
           tempChart.data.labels.push(now);
-          tempChart.data.datasets[0].data.push(data.temperatura);
+          tempChart.data.datasets[0].data.push(temp);
           if (tempChart.data.labels.length > 10) {
             tempChart.data.labels.shift();
             tempChart.data.datasets[0].data.shift();
           }
+          tempChart.options.scales.y.suggestedMin = minTemp;
+          tempChart.options.scales.y.suggestedMax = maxTemp;
           tempChart.update();
-
+  
           humChart.data.labels.push(now);
-          humChart.data.datasets[0].data.push(data.umidade);
+          humChart.data.datasets[0].data.push(hum);
           if (humChart.data.labels.length > 10) {
             humChart.data.labels.shift();
             humChart.data.datasets[0].data.shift();
           }
+          humChart.options.scales.y.suggestedMin = minHum;
+          humChart.options.scales.y.suggestedMax = maxHum;
           humChart.update();
         })
         .catch(error => console.error("Erro ao atualizar dados: ", error));
     }
-
+  
     setInterval(updateData, 5000); // Atualiza a cada 5 segundos
     window.onload = updateData; // Atualiza ao carregar a página
-  </script>
+  </script>  
 </body>
 </html>
 )rawliteral";
