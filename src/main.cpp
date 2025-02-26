@@ -2,13 +2,15 @@
 #include <ESPAsyncWebServer.h>
 #include <DHT.h>
 
+// Definição do pino e do sensor usado 
 #define DHTPIN 4
 #define DHTTYPE DHT22
 
+// Criação do objeto 
 DHT dht(DHTPIN, DHTTYPE);
 
-const char* ssid = "RODRIGUES 2.4";
-const char* password = "09221953";
+const char* ssid = "NomeDaRede";
+const char* password = "SenhaDarede";
 
 // Cria o servidor assíncrono na porta 80
 AsyncWebServer server(80);
